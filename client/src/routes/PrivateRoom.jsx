@@ -1,0 +1,79 @@
+import { useEffect, useState } from "react";
+import { IoMdSend } from "react-icons/io";
+import { socket } from "../socket";
+import { useParams } from "react-router";
+
+const PrivateRoom = () => {
+    const [context, setContext] = useState('');
+    const [messages, setMessages] = useState([]);
+    const {id} = useParams();
+
+
+    useEffect(() => {
+        socket.on('message', (message) => {
+            console.log(message)
+            setMessages((prev) => [...prev, message])
+        })
+
+
+        return () => {
+            socket.off('message')
+        };
+    }, [])
+
+    // state function
+    const handleContextChange = (event) => {
+        setContext(event.target.value);
+    }
+    
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        socket.emit('message', {to: id, context: context})
+        setContext('');
+    }
+
+    return (
+        <div  className="p-2 w-full md:w-[80%] md:m-auto h-screen flex flex-col">
+            <nav className='flex justify-between items-center p-2 font-noto'>
+                <div className="flex justify-center items-center gap-2">
+                    <span className="w-10 aspect-square bg-red-300 flex justify-center items-center rounded-full">J</span>
+                    <span>john</span>
+                </div>
+                <ul className='flex gap-2'>
+                <li className='p-2'>Home</li>
+                <li className='bg-green-500 text-white p-2 rounded-sm'>Login</li>
+                </ul>
+            </nav>
+
+            <div className="w-full flex-1 overflow-y-auto p-2 flex flex-col gap-2">
+                {
+                    messages.map( (msg, index) => {
+                        return (
+                            <p 
+                                key={index}
+                                className={`${msg.senderId == socket.id && "self-end "} p-2 w-fit bg-blue-300 rounded-sm`}
+                            >
+                                {msg.context}
+                            </p>
+                        );
+                    })
+                }
+            </div>
+            <form 
+                className="w-full flex border rounded-sm p-2"
+                onSubmit={handleSubmit}
+            >
+                <input 
+                    type="text" 
+                    className="w-full outline-none"
+                    value={context}
+                    onChange={handleContextChange}
+                />
+                <IoMdSend size={20}/>
+            </form>
+        </div>
+    )
+}
+
+
+export default PrivateRoom;
