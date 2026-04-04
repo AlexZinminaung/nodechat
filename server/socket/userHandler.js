@@ -40,4 +40,9 @@ const searchUsers = (io, socket, search) => {
 
 }
 
-module.exports = { addUsers, removeUsers, searchUsers}
+const getUserById = (id) => {
+    const filterOnlineUser = onlineUserList.filter( onlineUser => onlineUser.id == id);
+    return filterOnlineUser[0];
+}
+
+module.exports = { addUsers, removeUsers, searchUsers, getUserById}

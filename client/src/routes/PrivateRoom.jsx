@@ -5,6 +5,7 @@ import { useParams } from "react-router";
 
 const PrivateRoom = () => {
     const [context, setContext] = useState('');
+    const [userName, setUserName] = useState('');
     const [messages, setMessages] = useState([]);
     const {id} = useParams();
 
@@ -15,10 +16,21 @@ const PrivateRoom = () => {
             setMessages((prev) => [...prev, message])
         })
 
+        // restoring message
+        socket.emit('restore', id);
+
+        socket.on('restore', (recoverMessages, userName) => {
+            console.log(recoverMessages);
+            setUserName(userName);
+            setMessages((prev) => [...recoverMessages])
+        })
 
         return () => {
             socket.off('message')
+            socket.off('restore')
+
         };
+
     }, [])
 
     // state function
@@ -28,7 +40,7 @@ const PrivateRoom = () => {
     
     const handleSubmit = (event) => {
         event.preventDefault();
-        socket.emit('message', {to: id, context: context})
+        socket.emit('message', {senderId: socket.id, recivierId: id, context: context})
         setContext('');
     }
 
@@ -36,8 +48,8 @@ const PrivateRoom = () => {
         <div  className="p-2 w-full md:w-[80%] md:m-auto h-screen flex flex-col">
             <nav className='flex justify-between items-center p-2 font-noto'>
                 <div className="flex justify-center items-center gap-2">
-                    <span className="w-10 aspect-square bg-red-300 flex justify-center items-center rounded-full">J</span>
-                    <span>john</span>
+                    <span className="w-10 aspect-square bg-red-300 flex justify-center items-center rounded-full">{userName[0]}</span>
+                    <span>{userName}</span>
                 </div>
                 <ul className='flex gap-2'>
                 <li className='p-2'>Home</li>

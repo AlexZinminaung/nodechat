@@ -9,7 +9,7 @@ const Dashboard = () => {
 
     const [userName, setUserName] = useState('');
     const [results, setResults] = useState([]);
-
+    const [chats, setChats] = useState([]);
     // get user name from url
     const { name } = useParams();
 
@@ -18,13 +18,46 @@ const Dashboard = () => {
         socket.connect()
 
         socket.emit('online', {name: name})
+
+        socket.on('restore chats', (chats) => {
+            const filterChats = chats.map( chat => {
+                if (chat[0].id == socket.id)
+                {
+                    return chat[1]
+                }
+                
+                else {
+                    return chat[0]
+                }
+            })
+
+            setChats(prev => {
+                return [...filterChats]
+            })
+        })
+
         socket.on('search', (results) => {
             setResults(results);
+        })
+
+        socket.on('chat', (user) => {
+            // only add new chat not from the same user
+            console.log('user', user);
+            setChats(prev => {
+                // check if this chat already exists in the latest state
+                const isChatExist = prev.some(chat => chat.name === user.name);
+                if (isChatExist) return prev;
+
+                // append new chat
+                return [...prev, user];
+            });
         })
     
 
         return () => {
             socket.off('search')
+            socket.off('chat')
+            socket.off('restore chats')
         };
     }, [])
 
@@ -39,9 +72,8 @@ const Dashboard = () => {
             <div className="p-2 w-full md:w-[80%] md:m-auto">
                 <Searchbox userName={userName} handleChangeUserName={handleChangeUserName}/>
                 <SearchResults results={results}/>
-                <RecentChat/>
+                <RecentChat chats={chats}/>
             </div>
-
     );
 }
 

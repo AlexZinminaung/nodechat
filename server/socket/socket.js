@@ -1,4 +1,8 @@
-const { addUsers, removeUsers, searchUsers}  = require('./userHandler')
+const { addUsers, removeUsers, searchUsers, getUserById }  = require('./userHandler')
+const { storeMessages, getRecoverMessages, storeChats, getRecoverChats, removeChat } = require('./chatHandler');
+
+
+
 
 
 const socketHandler = (io) => {
@@ -9,13 +13,15 @@ const socketHandler = (io) => {
         socket.on('disconnect', () => {
             console.log(socket.id, 'has disconnected')
             removeUsers(socket)
+            removeChat(socket.id);
         })
 
         // add news user to online list
         socket.on('online', (user) => {
-            console.log('user name is', user.name);
             addUsers({id: socket.id, name: user.name})
-
+            // check if user have chats and return
+            const chats = getRecoverChats(socket.id);
+            io.to(socket.id).emit('restore chats', chats)
         })
 
         // search user by name except user itself
@@ -25,9 +31,31 @@ const socketHandler = (io) => {
 
         // sending private messages
         socket.on('message', (message) => {
-            console.log(`Id ${socket.id} sending ${message.context} to ${message.to}`)
-            io.to(socket.id).emit('message', {senderId: socket.id, recivierId: message.to, context: message.context})
-            io.to(message.to).emit('message', {senderId: socket.id, recivierId: message.to, context: message.context})
+            // restore messages
+            storeMessages(message)
+
+            io.to(message.senderId).emit('message', {senderId: message.senderId, recivierId: message.recivierId, context: message.context})
+            io.to(message.recivierId).emit('message', {senderId: message.senderId, recivierId: message.recivierId, context: message.context})
+
+            // to create recent chat
+            // store recent chat into recent chat lists
+            user1 = getUserById(message.senderId)
+            user2 = getUserById(message.recivierId)
+            const members = [user1, user2];
+            console.log('memeber', members)
+            storeChats(members);
+
+            // get the name of the user
+            const sender = getUserById(socket.id);
+            io.to(message.recivierId).emit('chat', sender);
+        })
+
+        // restoring messages
+        socket.on('restore', (id) => {
+            // find the message in messageList [] and return;
+            const recoverMessages = getRecoverMessages(socket.id, id);
+            const user = getUserById(id);
+            io.to(socket.id).emit('restore', recoverMessages, user.name);
         })
 
     })
