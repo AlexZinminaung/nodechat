@@ -1,5 +1,5 @@
 const { addUsers, removeUsers, searchUsers, getUserById }  = require('./userHandler')
-const { storeMessages, getRecoverMessages, storeChats, getRecoverChats, removeChat } = require('./chatHandler');
+const { storeMessages, getRecoverMessages, storeChats, getRecoverChats, removeChat, removeMessage } = require('./chatHandler');
 
 
 
@@ -14,6 +14,7 @@ const socketHandler = (io) => {
             console.log(socket.id, 'has disconnected')
             removeUsers(socket)
             removeChat(socket.id);
+            removeMessage(socket.id);
         })
 
         // add news user to online list
@@ -31,6 +32,14 @@ const socketHandler = (io) => {
 
         // sending private messages
         socket.on('message', (message) => {
+            console.log('message', message)
+            const sender = getUserById(message.senderId)
+            const recivier = getUserById(message.recivierId)
+            //check if user disconnect 
+            if (!recivier) {
+                io.to(socket.id).emit('redirect', {message: "User is disconnected"})
+                return;
+            }
             // restore messages
             storeMessages(message)
 
@@ -46,7 +55,6 @@ const socketHandler = (io) => {
             storeChats(members);
 
             // get the name of the user
-            const sender = getUserById(socket.id);
             io.to(message.recivierId).emit('chat', sender);
         })
 
@@ -55,6 +63,13 @@ const socketHandler = (io) => {
             // find the message in messageList [] and return;
             const recoverMessages = getRecoverMessages(socket.id, id);
             const user = getUserById(id);
+            const sender = getUserById(socket.id)
+            // if user does not exist then redirect
+            if (!user) {
+                io.to(socket.id).emit('redirect', {message: "User is disconnected", sender: sender.name})
+                return;
+            }
+            // else user exist then restore message if exist
             io.to(socket.id).emit('restore', recoverMessages, user.name);
         })
 

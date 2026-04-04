@@ -1,19 +1,26 @@
 import { useEffect, useState } from "react";
 import { IoMdSend } from "react-icons/io";
 import { socket } from "../socket";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 
 const PrivateRoom = () => {
     const [context, setContext] = useState('');
     const [userName, setUserName] = useState('');
     const [messages, setMessages] = useState([]);
     const {id} = useParams();
-
+    
+    let navigate = useNavigate();
 
     useEffect(() => {
         socket.on('message', (message) => {
             console.log(message)
             setMessages((prev) => [...prev, message])
+        })
+
+        // redirect if user is disconnected
+        socket.on('redirect', (response) => {
+            alert(response.message);
+            navigate(`/dashboard/${response.sender}`)
         })
 
         // restoring message
@@ -27,7 +34,9 @@ const PrivateRoom = () => {
 
         return () => {
             socket.off('message')
+            socket.off('redirect')
             socket.off('restore')
+
 
         };
 

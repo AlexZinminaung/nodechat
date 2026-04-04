@@ -7,6 +7,7 @@ let chatList = [];
 
 const storeMessages = (message) => {
     messageList.push(message)
+    console.log(messageList);
 }
 
 
@@ -16,6 +17,14 @@ const getRecoverMessages = (userId1, userId2) => {
     })
 
     return filterMessages;
+}
+
+const removeMessage = (userId) => {
+  const filterMessages = messageList.filter( message => {
+    return (message.senderId != userId) && (message.recivierId != userId)
+  })
+  
+  messageList = filterMessages;
 }
 
 const storeChats = (members) => {
@@ -33,9 +42,9 @@ const storeChats = (members) => {
     console.log('chat member', chatList);
 }
 
-const removeChat = (id) => {
+const removeChat = (userId) => {
     const filterChat = chatList.filter( chat => {
-        return chat[0].id !== id && chat[1].id !== id;
+        return chat[0].id !== userId && chat[1].id !== userId;
     })
     
     chatList = filterChat;
@@ -51,4 +60,4 @@ const getRecoverChats = (userId) => {
     return filterChats;
 }
 
-module.exports = { storeMessages, getRecoverMessages, storeChats, getRecoverChats, removeChat }
+module.exports = { storeMessages, getRecoverMessages, storeChats, getRecoverChats, removeChat, removeMessage }
