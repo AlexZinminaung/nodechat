@@ -54,7 +54,7 @@ const PrivateRoom = () => {
     }
 
     return (
-        <div  className="p-2 w-full md:w-[80%] md:m-auto h-screen flex flex-col">
+        <div  className="p-2 w-full md:w-[80%] md:m-auto h-[100dvh] flex flex-col">
             <nav className='flex justify-between items-center p-2 font-noto'>
                 <div className="flex justify-center items-center gap-2">
                     <span className="w-10 aspect-square bg-red-300 flex justify-center items-center rounded-full">{userName[0]}</span>

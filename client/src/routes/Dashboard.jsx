@@ -69,7 +69,7 @@ const Dashboard = () => {
     }
 
     return (
-            <div className="p-2 w-full md:w-[80%] md:m-auto">
+            <div className="p-2 w-full h-[100dvh] md:w-[80%] md:m-auto">
                 <Searchbox userName={userName} handleChangeUserName={handleChangeUserName}/>
                 <SearchResults results={results}/>
                 <RecentChat chats={chats}/>
