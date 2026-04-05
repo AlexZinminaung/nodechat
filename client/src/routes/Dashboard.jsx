@@ -64,7 +64,7 @@ const Dashboard = () => {
 
     // state function
     const handleChangeUserName = (value) => {
-        setUserName(value.trim())
+        setUserName(value)
         socket.emit('search', {id: socket.id, name: value})
     }
 

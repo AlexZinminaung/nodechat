@@ -3,7 +3,10 @@ import { CiSearch } from "react-icons/ci";
 const Searchbox = ({userName, handleChangeUserName}) => {
 
     return (
-            <form className="flex border justify-center items-center">
+            <form 
+                className="flex border justify-center items-center"
+                onSubmit={(event) => { event.preventDefault()}}
+            >
                 <input 
                     type="text" 
                     className="w-full outline-none p-2"
