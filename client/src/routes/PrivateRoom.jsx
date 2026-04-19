@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { IoMdSend } from "react-icons/io";
 import { socket } from "../socket";
 import { useParams, useNavigate } from "react-router";
+import { v4 as uuidv4 } from 'uuid';
 
 const PrivateRoom = () => {
     const [context, setContext] = useState('');
@@ -14,7 +15,25 @@ const PrivateRoom = () => {
     useEffect(() => {
         socket.on('message', (message) => {
             console.log(message)
-            setMessages((prev) => [...prev, message])
+            
+            // first filter messages for private chat by check sender id and reciver id
+            const isPrivateMessage = (
+                (message.senderId == socket.id && message.recivierId == id) ||
+                (message.recivierId == socket.id && message.senderId == id)
+            )
+
+            if (!isPrivateMessage)
+            {
+                return ;
+            }
+
+            // second filter message from sender not to duplicate
+
+            setMessages( prev => {
+                const exist = prev.some( msg => msg.messageId == message.messageId)
+                if (exist) return prev;
+                return [...prev, message];
+            })
         })
 
         // redirect if user is disconnected
@@ -48,13 +67,15 @@ const PrivateRoom = () => {
     }
     
     const handleSubmit = (event) => {
+        const message = {senderId: socket.id, recivierId: id, messageId: uuidv4(), context: context}
+        setMessages((prev) => [...prev, message])
         event.preventDefault();
-        socket.emit('message', {senderId: socket.id, recivierId: id, context: context})
+        socket.emit('message', message)
         setContext('');
     }
 
     return (
-        <div  className="p-2 w-full md:w-[80%] md:m-auto h-[100dvh] flex flex-col">
+        <div key={id}  className="p-2 w-full md:w-[80%] md:m-auto h-[100dvh] flex flex-col">
             <nav className='flex justify-between items-center p-2 font-noto'>
                 <div className="flex justify-center items-center gap-2">
                     <span className="w-10 aspect-square bg-red-300 flex justify-center items-center rounded-full">{userName[0]}</span>
@@ -68,10 +89,10 @@ const PrivateRoom = () => {
 
             <div className="w-full flex-1 overflow-y-auto p-2 flex flex-col gap-2">
                 {
-                    messages.map( (msg, index) => {
+                    messages.map( (msg) => {
                         return (
                             <p 
-                                key={index}
+                                key={msg.messageId}
                                 className={`${msg.senderId == socket.id && "self-end "} p-2 w-fit bg-blue-300 rounded-sm`}
                             >
                                 {msg.context}
@@ -90,7 +111,7 @@ const PrivateRoom = () => {
                     value={context}
                     onChange={handleContextChange}
                 />
-                <IoMdSend size={20}/>
+                <button type="submit"><IoMdSend size={20}/></button>
             </form>
         </div>
     )

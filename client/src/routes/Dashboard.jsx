@@ -1,7 +1,7 @@
 
 import { socket } from "../socket";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import Searchbox from "../components/Searchbox";
 import SearchResults from "../components/SearchResults";
 import RecentChat from "../components/RecentChat";
@@ -10,8 +10,10 @@ const Dashboard = () => {
     const [userName, setUserName] = useState('');
     const [results, setResults] = useState([]);
     const [chats, setChats] = useState([]);
+
     // get user name from url
     const { name } = useParams();
+    const navigate = useNavigate();
 
     // connect socket initially
     useEffect(() => {
@@ -52,12 +54,17 @@ const Dashboard = () => {
                 return [...prev, user];
             });
         })
+
+        socket.on('redirect', () => {
+            navigate('/')
+        })
     
 
         return () => {
-            socket.off('search')
-            socket.off('chat')
-            socket.off('restore chats')
+            socket.off('search');
+            socket.off('chat');
+            socket.off('restore chats');
+            socket.off('redirect');
         };
     }, [])
 

@@ -32,7 +32,6 @@ const socketHandler = (io) => {
 
         // sending private messages
         socket.on('message', (message) => {
-            console.log('message', message)
             const sender = getUserById(message.senderId)
             const recivier = getUserById(message.recivierId)
             //check if user disconnect 
@@ -42,14 +41,22 @@ const socketHandler = (io) => {
             }
             // restore messages
             storeMessages(message)
-
-            io.to(message.senderId).emit('message', {senderId: message.senderId, recivierId: message.recivierId, context: message.context})
-            io.to(message.recivierId).emit('message', {senderId: message.senderId, recivierId: message.recivierId, context: message.context})
+            
+            io.to(message.senderId).emit('message', message)
+            io.to(message.recivierId).emit('message', message)
 
             // to create recent chat
             // store recent chat into recent chat lists
             user1 = getUserById(message.senderId)
             user2 = getUserById(message.recivierId)
+
+            // check if both member is still exit 
+            // if one or both disconnect then don't restore 
+            if (!user1 || !user2) {
+                io.emit('redirect')
+                return;
+            }
+            
             const members = [user1, user2];
             console.log('memeber', members)
             storeChats(members);
